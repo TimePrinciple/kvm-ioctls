@@ -18,7 +18,7 @@ use vmm_sys_util::ioctl::{ioctl, ioctl_with_mut_ref, ioctl_with_ref};
 use vmm_sys_util::ioctl::{ioctl_with_mut_ptr, ioctl_with_ptr, ioctl_with_val};
 
 /// Helper method to obtain the size of the register through its id
-#[cfg(any(target_arch = "arm", target_arch = "aarch64"))]
+#[cfg(any(target_arch = "arm", target_arch = "aarch64", target_arch = "riscv64"))]
 pub fn reg_size(reg_id: u64) -> usize {
     2_usize.pow(((reg_id & KVM_REG_SIZE_MASK) >> KVM_REG_SIZE_SHIFT) as u32)
 }
@@ -774,7 +774,8 @@ impl VcpuFd {
         target_arch = "x86_64",
         target_arch = "arm",
         target_arch = "aarch64",
-        target_arch = "s390"
+        target_arch = "s390",
+        target_arch = "riscv64"
     ))]
     pub fn get_mp_state(&self) -> Result<kvm_mp_state> {
         let mut mp_state = Default::default();
@@ -812,7 +813,8 @@ impl VcpuFd {
         target_arch = "x86_64",
         target_arch = "arm",
         target_arch = "aarch64",
-        target_arch = "s390"
+        target_arch = "s390",
+        target_arch = "riscv64"
     ))]
     pub fn set_mp_state(&self, mp_state: kvm_mp_state) -> Result<()> {
         // SAFETY: Here we trust the kernel not to read past the end of the kvm_mp_state struct.
@@ -1283,7 +1285,7 @@ impl VcpuFd {
     ///
     /// `data` should be equal or bigger then the register size
     /// oterwise function will return EINVAL error
-    #[cfg(any(target_arch = "arm", target_arch = "aarch64"))]
+    #[cfg(any(target_arch = "arm", target_arch = "aarch64", target_arch = "riscv64"))]
     pub fn set_one_reg(&self, reg_id: u64, data: &[u8]) -> Result<usize> {
         let reg_size = reg_size(reg_id);
         if data.len() < reg_size {
@@ -1315,7 +1317,7 @@ impl VcpuFd {
     ///
     /// `data` should be equal or bigger then the register size
     /// oterwise function will return EINVAL error
-    #[cfg(any(target_arch = "arm", target_arch = "aarch64"))]
+    #[cfg(any(target_arch = "arm", target_arch = "aarch64", target_arch = "riscv64"))]
     pub fn get_one_reg(&self, reg_id: u64, data: &mut [u8]) -> Result<usize> {
         let reg_size = reg_size(reg_id);
         if data.len() < reg_size {
@@ -1332,6 +1334,38 @@ impl VcpuFd {
             return Err(errno::Error::last());
         }
         Ok(reg_size)
+    }
+
+    /// This sets external interrupt for a virtual CPU and it will receive once it is ready.
+    ///
+    /// See the documentation for `KVM_INTERRUPT` in the
+    /// [KVM API documentation](https://www.kernel.org/doc/Documentation/virtual/kvm/api.txt).
+    #[cfg(any(target_arch = "riscv64"))]
+    pub fn set_interrupt(&self) -> Result<()> {
+        let interrupt = kvm_interrupt {
+            irq: KVM_INTERRUPT_SET as u32,
+        };
+        let ret = unsafe { ioctl_with_ref(self, KVM_INTERRUPT(), &interrupt) };
+        if ret != 0 {
+            return Err(errno::Error::last());
+        }
+        Ok(())
+    }
+
+    /// This clears pending external interrupt for a virtual CPU.
+    ///
+    /// See the documentation for `KVM_INTERRUPT` in the
+    /// [KVM API documentation](https://www.kernel.org/doc/Documentation/virtual/kvm/api.txt).
+    #[cfg(any(target_arch = "riscv64"))]
+    pub fn unset_interrupt(&self) -> Result<()> {
+        let interrupt = kvm_interrupt {
+            irq: KVM_INTERRUPT_UNSET as u32,
+        };
+        let ret = unsafe { ioctl_with_ref(self, KVM_INTERRUPT(), &interrupt) };
+        if ret != 0 {
+            return Err(errno::Error::last());
+        }
+        Ok(())
     }
 
     /// Notify the guest about the vCPU being paused.

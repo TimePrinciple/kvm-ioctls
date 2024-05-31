@@ -486,7 +486,8 @@ impl VmFd {
         target_arch = "x86",
         target_arch = "x86_64",
         target_arch = "arm",
-        target_arch = "aarch64"
+        target_arch = "aarch64",
+        target_arch = "riscv64"
     ))]
     pub fn signal_msi(&self, msi: kvm_msi) -> Result<c_int> {
         // SAFETY: Safe because we allocated the structure and we know the kernel
@@ -533,7 +534,8 @@ impl VmFd {
         target_arch = "x86",
         target_arch = "x86_64",
         target_arch = "arm",
-        target_arch = "aarch64"
+        target_arch = "aarch64",
+        target_arch = "riscv64"
     ))]
     pub fn set_gsi_routing(&self, irq_routing: &kvm_irq_routing) -> Result<()> {
         // SAFETY: Safe because we allocated the structure and we know the kernel
@@ -867,7 +869,8 @@ impl VmFd {
         target_arch = "x86",
         target_arch = "x86_64",
         target_arch = "arm",
-        target_arch = "aarch64"
+        target_arch = "aarch64",
+        target_arch = "riscv64"
     ))]
     pub fn register_irqfd(&self, fd: &EventFd, gsi: u32) -> Result<()> {
         let irqfd = kvm_irqfd {
@@ -978,7 +981,8 @@ impl VmFd {
         target_arch = "x86",
         target_arch = "x86_64",
         target_arch = "arm",
-        target_arch = "aarch64"
+        target_arch = "aarch64",
+        target_arch = "riscv64"
     ))]
     pub fn unregister_irqfd(&self, fd: &EventFd, gsi: u32) -> Result<()> {
         let irqfd = kvm_irqfd {
@@ -1049,7 +1053,8 @@ impl VmFd {
         target_arch = "x86",
         target_arch = "x86_64",
         target_arch = "arm",
-        target_arch = "aarch64"
+        target_arch = "aarch64",
+        target_arch = "riscv64"
     ))]
     pub fn set_irq_line(&self, irq: u32, active: bool) -> Result<()> {
         let mut irq_level = kvm_irq_level::default();
