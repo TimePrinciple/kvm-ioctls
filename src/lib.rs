@@ -20,6 +20,7 @@
 //!
 //! - x86_64
 //! - arm64 (experimental)
+//! - riscv64 (experimental)
 //!
 //! **NOTE:** The list of available ioctls is not extensive.
 //!
